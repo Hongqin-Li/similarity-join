@@ -1,0 +1,11 @@
+
+*
+!functions
+
+!*.c
+!*.md
+!*.pptx
+!*.sh
+!*.sql
+!.gitignore
+
