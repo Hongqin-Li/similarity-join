@@ -2,8 +2,85 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "postgres.h"
+#include "fmgr.h"
+
+#ifdef PG_MODULE_MAGIC
+PG_MODULE_MAGIC;
+#endif
+
 #define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
+
 #define MAX_LEN 128
+#define MAXH 100
+#define MAXN 1000
+
+typedef struct Node
+{
+    char a;
+    char b;
+    int cnt;
+    int nxt;
+} Node;
+
+static Node node[MAXN];
+static int ni;
+static int hash_table[MAXH];
+
+//2-gram
+static int hash(char a, char b)
+{
+    return (a*2 + b) % MAXH;
+}
+
+static void hash_init()
+{
+    ni = 0;
+    for (int i = 0; i < MAXH; i ++)
+        hash_table[i] = 0;
+}
+
+static void hash_insert(char a, char b)
+{
+    int key = hash(a, b);
+
+    int *pi = &hash_table[key];
+    while (*pi)
+    {
+        if (node[*pi].a == a && node[*pi].b == b)
+        {
+            node[*pi].cnt ++;
+            return;
+        }
+        pi = &node[*pi].nxt;
+    }
+    node[++ni].a = a;
+    node[ni].b = b;
+    node[ni].nxt = 0;
+    node[ni].cnt = 1;
+    *pi = ni;
+}
+
+static int hash_delete(char a, char b)
+{
+    int key = hash(a, b);
+    int *pi = &hash_table[key];
+    while (*pi)
+    {
+        Node now = node[*pi];
+        if (now.a == a && now.b == b)
+        {
+            if (now.cnt)
+            {
+                node[*pi].cnt --;
+                return 1;
+            }
+            else return 0;
+        }
+        pi = &node[*pi].nxt;
+    }
+    return 0;
+}
 
 void to_lower(const char *s, const size_t len, char *r)
 {
@@ -29,6 +106,7 @@ int _levenshtein_distance(const char *a, const char *b, const int len_a, const i
     return d[len_b][len_a];
 }
 
+/* Optimized Levenshtein distance by early stop */
 int _levenshtein_distance_less_than(const char *a, const char *b, const int len_a, const int len_b, int k)
 {
     static int d[MAX_LEN][MAX_LEN];
@@ -42,7 +120,7 @@ int _levenshtein_distance_less_than(const char *a, const char *b, const int len_
 
     for (int i = 1; i <= len_b; i ++) 
     {
-        int all_ge_k = 1;
+        int all_ge_k = 1;//All greater or equal to k
         for (int j = 1; j <= len_a; j ++) 
         {
             d[i][j] = MIN3(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[j-1] == b[i-1] ? 0 : 1));
@@ -52,59 +130,34 @@ int _levenshtein_distance_less_than(const char *a, const char *b, const int len_
             return 0;
     }
     return d[len_b][len_a] < k;
-
 }
 
-//2-Gram
+
+/* Hash table: much faster than naive look-up table */
 float _jaccard_index(const char *a, const char *b, const int len_a, const int len_b)
 {
-    //printf("len_a: %d\nlen_b: %d\n", len_a, len_b);
-
-    char dict[256][256] = {0};
-
     int intersect_cnt = 0;
+
+    hash_init();
     
-    dict['$'][a[0]] ++;
+    hash_insert('$', a[0]);
     for (int i = 1; i < len_a; i ++) 
-        dict[a[i-1]][a[i]] ++;
-    dict[a[len_a-1]]['$'] ++;
+        hash_insert(a[i-1], a[i]);
+    hash_insert(a[len_a-1], '$');
 
-    if (dict['$'][b[0]] != 0) intersect_cnt ++;
+    if (hash_delete('$', b[0])) intersect_cnt ++;
     for (int i = 1; i < len_b; i ++) 
-        if (dict[b[i-1]][b[i]] != 0)
+        if (hash_delete(b[i-1], b[i]))
             intersect_cnt ++;
-    if (dict[b[len_b-1]]['$'] != 0) intersect_cnt ++;
-
-    //printf("Intersect: %d\n", intersect_cnt);
+    if (hash_delete(b[len_b-1], '$')) intersect_cnt ++;
 
     return (float)intersect_cnt / (len_a + len_b + 2 - intersect_cnt);
 }
 
-#ifdef DEBUG
 
-
-int main() 
-{
-    char a[100];
-    char b[100];
-    scanf("%s", a);
-    scanf("%s", b);
-    printf("Jaccard distance: %f\n", _jaccard_index(a, b, strlen(a), strlen(b)));
-    printf("Levenshtein distance: %d\n", _levenshtein_distance(a, b, strlen(a), strlen(b)));
-
-}
-
-#else
-
-#include "postgres.h"
-#include "fmgr.h"
-#ifdef PG_MODULE_MAGIC
-PG_MODULE_MAGIC;
-#endif
 
 //Version 1 Calling Conventions
 PG_FUNCTION_INFO_V1(levenshtein_distance);
-
 Datum levenshtein_distance(PG_FUNCTION_ARGS)
 {
     text *s1_text = PG_GETARG_TEXT_PP(0);
@@ -125,7 +178,6 @@ Datum levenshtein_distance(PG_FUNCTION_ARGS)
 }
 
 PG_FUNCTION_INFO_V1(levenshtein_distance_less_than);
-
 Datum levenshtein_distance_less_than(PG_FUNCTION_ARGS)
 {
     text *s1_text = PG_GETARG_TEXT_PP(0);
@@ -148,9 +200,7 @@ Datum levenshtein_distance_less_than(PG_FUNCTION_ARGS)
 
 
 
-
 PG_FUNCTION_INFO_V1(jaccard_index);
-
 Datum jaccard_index(PG_FUNCTION_ARGS)
 {
     text *s1_text = PG_GETARG_TEXT_PP(0);
@@ -170,7 +220,6 @@ Datum jaccard_index(PG_FUNCTION_ARGS)
     PG_RETURN_FLOAT8(_jaccard_index(s1_lower, s2_lower, len_s1, len_s2));
 }
 
-#endif
 
 
 

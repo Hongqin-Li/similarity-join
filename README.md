@@ -38,15 +38,21 @@ bash connect_db.sh
 
 **You're highly recommended to backup the source code first!**
 
-After modifying `config.sh`, we can run 
+After modifying `config.sh`, we can adding the similarity join functions into core by 
 
 ```
 python3 patch.py
 ```
 
-which will modify the source code. 
+Then compile and install source code by
 
-And we can unpatch it by
+```
+bash setup.sh
+```
+
+Now we can have fun with those fancy functions...
+
+Once you are bored with the custom functions, unpatch it by
 
 ```
 python3 patch.py -u
