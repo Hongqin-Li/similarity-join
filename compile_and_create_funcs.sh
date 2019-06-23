@@ -1,4 +1,3 @@
-
 source config.sh
 
 # If modified this, ./create_funcs should be modified also
@@ -11,3 +10,8 @@ cc -shared -o $FUNC_DIR/$SO_PREFIX.so $FUNC_DIR/$SO_PREFIX.o
 cp $FUNC_DIR/$SO_PREFIX.so $PG_DIR/lib
 
 rm $FUNC_DIR/$SO_PREFIX.so $FUNC_DIR/$SO_PREFIX.o
+
+
+$PG_DIR/bin/psql -h /tmp/ postgres -f $SQL_DIR/create_funcs.sql
+
+

@@ -10,7 +10,15 @@ cd $PG_SOURCE_DIR/
 ./configure --prefix=$PG_DIR/
 # --prefix denotes where Postgres should be installed
 
-make
-make install
+while getopts "c" opt; do
+    case "${opt}" in
+        c)
+            echo "make clean"
+            make clean
+            ;;
+    esac
+done
+
+make && make install
 
 $PG_DIR/bin/initdb -D $PG_DIR/data/

@@ -1,6 +1,6 @@
-# Project 2 Similar Join
+# Similarity Join
 
-reference: https://github.com/czhongyu/similarity-join/blob/master/extending-by-c-functions/similarity_join.c
+Custom functions of similarity join for PostgreSQL
 
 
 
@@ -14,17 +14,13 @@ Change `PG_SOURCE_DIR`  to the path of the Postgres source code directory (e.g. 
 bash setup.sh
 ```
 
-
-
-## Usage
-
-First, to run the back end server, run 
+After we can run the back end server by
 
 ```
 bash run_server.sh
 ```
 
-Then we can connect to the server and start  by 
+Then connect to the server and access the database by 
 
 ```
 bash connect_db.sh
@@ -32,9 +28,35 @@ bash connect_db.sh
 
 
 
+## Extending By C Function
+
+There are three custom functions implemented for similarity join.
+
+1. `levenshtein_distance(a, b)`: return an integer, which is the Levenshtein distance between string a and b
+2. `levenshtein_distance_less_than(a, b, threshold)`: return a bool, which is true if `levenshtein_distance(a, b) < threshold`
+3. `jaccard_distance(a, b)`: return a float, which is the 2-gram jaccard distance between string a and b.
 
 
 
+### Compile And Create Functions
+
+Simply run
+
+```
+bash compile_and_create_funcs.sh
+```
+
+
+
+### Drop Functions
+
+The way to drop those functions can be found in `./sql/drop_funcs.sql`. That is execute `\i ./sql/drop_funcs.sql` in psql, which can be run by `bash connect_db.sh`.
+
+
+
+### Test
+
+Simply test by running `bash test.sh`, which will execute some sql using the three functions.
 
 
 

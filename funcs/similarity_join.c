@@ -65,13 +65,13 @@ float _jaccard_index(const char *a, const char *b, const int len_a, const int le
     int intersect_cnt = 0;
     
     dict['$'][a[0]] ++;
-    for (int i = 0; i < len_a - 1; i ++) 
-        dict[a[i]][a[i+1]] ++;
+    for (int i = 1; i < len_a; i ++) 
+        dict[a[i-1]][a[i]] ++;
     dict[a[len_a-1]]['$'] ++;
 
     if (dict['$'][b[0]] != 0) intersect_cnt ++;
-    for (int i = 0; i < len_b - 1; i ++) 
-        if (dict[b[i]][b[i+1]] != 0)
+    for (int i = 1; i < len_b; i ++) 
+        if (dict[b[i-1]][b[i]] != 0)
             intersect_cnt ++;
     if (dict[b[len_b-1]]['$'] != 0) intersect_cnt ++;
 
