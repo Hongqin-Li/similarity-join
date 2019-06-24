@@ -61,6 +61,7 @@ static void hash_insert(char a, char b)
     *pi = ni;
 }
 
+/* return 1 if delete successfully else 0 */
 static int hash_delete(char a, char b)
 {
     int key = hash(a, b);
@@ -82,13 +83,14 @@ static int hash_delete(char a, char b)
     return 0;
 }
 
-void to_lower(const char *s, const size_t len, char *r)
+/* Convert string s to lower case */
+static void to_lower(const char *s, const size_t len, char *r)
 {
     for (int i = 0; i < len; i ++)
         r[i] = tolower(s[i]); 
 }
-
-int _levenshtein_distance(const char *a, const char *b, const int len_a, const int len_b)
+/* return an int, which is the Levenshtein distance between a and b */
+static int _levenshtein_distance(const char *a, const char *b, const int len_a, const int len_b)
 {
     static int d[MAX_LEN][MAX_LEN];
     d[0][0] = 0;
@@ -107,7 +109,13 @@ int _levenshtein_distance(const char *a, const char *b, const int len_a, const i
 }
 
 /* Optimized Levenshtein distance by early stop */
-int _levenshtein_distance_less_than(const char *a, const char *b, const int len_a, const int len_b, int k)
+/* 
+    if Levenshtein distance between a and b is less than k
+        return 1
+    else 
+        return 0 
+*/
+static int _levenshtein_distance_less_than(const char *a, const char *b, const int len_a, const int len_b, int k)
 {
     static int d[MAX_LEN][MAX_LEN];
     d[0][0] = 0;
@@ -134,17 +142,20 @@ int _levenshtein_distance_less_than(const char *a, const char *b, const int len_
 
 
 /* Hash table: much faster than naive look-up table */
-float _jaccard_index(const char *a, const char *b, const int len_a, const int len_b)
+/* return a float, which is the jaccard index of string a and b */
+static float _jaccard_index(const char *a, const char *b, const int len_a, const int len_b)
 {
     int intersect_cnt = 0;
 
     hash_init();
     
+    /* Counting 2-gram of a by inserting into hash table */
     hash_insert('$', a[0]);
     for (int i = 1; i < len_a; i ++) 
         hash_insert(a[i-1], a[i]);
     hash_insert(a[len_a-1], '$');
 
+    /* Counting intersection search for and delete 2-gram of b */
     if (hash_delete('$', b[0])) intersect_cnt ++;
     for (int i = 1; i < len_b; i ++) 
         if (hash_delete(b[i-1], b[i]))

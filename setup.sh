@@ -19,6 +19,9 @@ while getopts "c" opt; do
     esac
 done
 
+
 make && make install
 
-$PG_DIR/bin/initdb -D $PG_DIR/data/
+cd -
+rm $DB_DIR -r
+$PG_DIR/bin/initdb -D $DB_DIR

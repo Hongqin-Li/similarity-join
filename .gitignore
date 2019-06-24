@@ -1,12 +1,17 @@
 
 *
 !funcs
+!sql
 
 !*.c
-!*.md
-!*.pptx
-!*.sh
-!*.sql
-!.gitignore
 !*.py
+!*.sh
+
+!*.sql
+
+!*.md
+!*.pdf
+!*.pptx
+
+!.gitignore
 

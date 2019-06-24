@@ -2,6 +2,25 @@
 
 Extension of similarity join for PostgreSQL
 
+```
+.
+├── funcs/similarity_join.c
+│ 
+├── patch.py: patch and unpatch source code
+│ 
+├── config.sh: Configurations e.g. source code directory
+├── setup.sh: Install Postgresql from source
+├── run_server.sh
+├── connect_db.sh
+├── build_dataset.sh
+├── compile_and_create_funcs.sh
+├── test.sh
+│ 
+├── sql: sql utils
+├── data: database, will be created by setup.sh by default 
+└── postgresql-11.2: directory for source code by default
+```
+
 
 
 ## Configuration
